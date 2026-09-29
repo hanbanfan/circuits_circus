@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171329">
+  <title>Circuits Circus</title>
+  <style>
+    :root {
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      color: #fff9e9;
+      background: #171329;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #ffda73; outline-offset: 3px; }
+    .app { max-width: 1120px; margin: auto; padding: 20px 18px 48px; }
+    header, .hud, .row, .buttons {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    }
+    header { padding: 8px 0 22px; }
+    .logo { display: flex; align-items: center; gap: 13px; }
+    .mark {
+      display: grid; place-items: center; width: 52px; height: 52px;
+      border-radius: 16px; background: #ffcf57; color: #231533;
+      font-size: 32px; font-weight: 900; box-shadow: 0 0 28px #ffcf5780;
+    }
+    h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.4rem); letter-spacing: -.05em; }
+    .muted { color: #bcb3d2; }
+    header p { margin: 1px 0 0; font-size: .9rem; }
+    .small-button {
+      border: 1px solid #78638e; border-radius: 11px;
+      background: #312842; color: #fff9e9; padding: 9px 12px;
+    }
+    .small-button:hover { background: #463558; }
+    .hud {
+      flex-wrap: wrap; padding: 15px 19px; border: 1px solid #604e75;
+      border-radius: 16px; background: #281f3a;
+    }
+    .hud div { min-width: 80px; }
+    .hud span { display: block; color: #c7b8d7; font-size: .72rem; font-weight: 800; }
+    .hud strong { display: block; margin-top: 3px; font-size: 1.25rem; }
+    #lives { color: #ff829d; letter-spacing: 3px; }
+    .track { display: flex; gap: 7px; margin: 17px 0 21px; }
+    .track i { flex: 1; height: 7px; border-radius: 20px; background: #493954; }
+    .track i.current { background: #ffcf57; box-shadow: 0 0 15px #ffcf57; }
+    .track i.done { background: #70e2d1; }
+    main { display: grid; grid-template-columns: 1.05fr .95fr; gap: 18px; }
+    .card {
+      border: 1px solid #604e75; border-radius: 21px;
+      background: #29203b; box-shadow: 0 18px 45px #0b081799;
+      overflow: hidden;
+    }
+    .inside { padding: 23px; }
+    .eyebrow {
+      margin: 0 0 8px; color: #70e2d1; font-size: .77rem;
+      font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
+    }
+    h2 { margin: 0; font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1.2; }
+    .description { color: #d5cbe0; line-height: 1.55; }
+    .board {
+      margin-top: 20px; padding: 12px; border-radius: 17px;
+      background:
+        radial-gradient(circle, #d3a5df28 1px, transparent 1px) 0 0 / 18px 18px,
+        #1c1830;
+    }
+    svg { width: 100%; height: auto; display: block; }
+    #boardNote { margin: 0 5px 5px; color: #c3b3d5; font-size: .82rem; }
+    .challenge { display: flex; flex-direction: column; min-height: 550px; }
+    .row { color: #c9bdd9; font-size: .82rem; font-weight: 800; }
+    #stepLabel { color: #ffcf57; }
+    .timer { height: 9px; margin: 16px 0 25px; border-radius: 20px; background: #171329; }
+    #timerFill {
+      height: 100%; width: 100%; border-radius: 20px;
+      background: #70e2d1; transition: width .15s linear;
+    }
+    #question { margin-bottom: 20px; }
+    #choices { display: grid; gap: 10px; }
+    .choice {
+      min-height: 58px; width: 100%; padding: 12px 15px;
+      border: 1px solid #75618a; border-radius: 13px;
+      background: #3a2d50; color: white; text-align: left; font-weight: 760;
+      transition: transform .14s, background .14s;
+    }
+    .choice:not(:disabled):hover { transform: translateY(-2px); background: #503764; }
+    .choice:disabled { cursor: default; }
+    .choice.correct { border-color: #70e2d1; background: #235249; }
+    .choice.wrong { border-color: #ff829d; background: #63324a; }
+    .key {
+      display: inline-grid; place-items: center; width: 25px; height: 25px;
+      margin-right: 10px; border: 1px solid #ffffff70;
+      border-radius: 6px; font-size: .78rem;
+    }
+    #feedback {
+      min-height: 82px; margin: 18px 0; padding: 13px 15px;
+      border-left: 4px solid #ffcf57; border-radius: 5px;
+      background: #1c1830; line-height: 1.45;
+    }
+    #feedback.good { border-color: #70e2d1; }
+    #feedback.bad { border-color: #ff829d; }
+    .buttons { margin-top: auto; }
+    #hint { color: #ffda8c; }
+    #next, #restart {
+      border: 0; border-radius: 11px; background: #ffcf57;
+      color: #251a2c; padding: 11px 17px; font-weight: 900;
+    }
+    #next:hover, #restart:hover { background: #ffe49a; }
+    [hidden] { display: none !important; }
+    #ending { padding: 45px 25px; text-align: center; }
+    #ending .emoji { font-size: 5rem; }
+    #ending p { color: #d5cbe0; line-height: 1.6; }
+    footer { padding: 18px 5px; color: #b9abc8; font-size: .84rem; }
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+      .challenge { min-height: 0; }
+      .hud { justify-content: space-around; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">
+        <div class="mark" aria-hidden="true">ϟ</div>
+        <div>
+          <h1>Circuits Circus</h1>
+          <p class="muted">Thevenin's Big Top</p>
+        </div>
+      </div>
+      <button class="small-button" id="sound" type="button">Sound on</button>
+    </header>
+
+    <div class="hud">
+      <div><span>ACT</span><strong id="act">1 / 6</strong></div>
+      <div><span>POINTS</span><strong id="score">0</strong></div>
+      <div><span>STREAK</span><strong id="streak">0</strong></div>
+      <div><span>LIVES</span><strong id="lives">♥ ♥ ♥</strong></div>
+      <div><span>BEST</span><strong id="best">0</strong></div>
+    </div>
+
+    <div class="track" id="track" aria-label="Level progress"></div>
+
+    <main id="game">
+      <section class="card">
+        <div class="inside">
+          <p class="eyebrow" id="circuitNumber"></p>
+          <h2 id="levelTitle"></h2>
+          <p class="description" id="description"></p>
+          <div class="board">
+            <div id="circuit"></div>
+            <p id="boardNote"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="inside challenge">
+          <div class="row">
+            <span id="stepLabel"></span>
+            <span id="time">25s</span>
+          </div>
+          <div class="timer"><div id="timerFill"></div></div>
+          <h2 id="question"></h2>
+          <div id="choices"></div>
+          <div id="feedback" role="status" aria-live="polite">
+            Choose an answer. You can also press keys 1–4.
+          </div>
+          <div class="buttons">
+            <button class="small-button" id="hint" type="button">Hint · −25</button>
+            <button id="next" type="button" hidden>Continue</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section class="card" id="ending" hidden>
+      <div class="emoji" aria-hidden="true">⚡</div>
+      <h2 id="endingTitle"></h2>
+      <p id="endingText"></p>
+      <button id="restart" type="button">Play again</button>
+    </section>
+
+    <footer>Ideal DC circuits. Resistors are in kΩ, so volts ÷ kΩ gives mA.</footer>
+  </div>
+
+  <script>
+    "use strict";
+
+    const levels = [
+      {
+        name: "Opening Act", kind: "divider",
+        vs: 12, r1: 2, r2: 3, r3: 0, rl: 6,
+        description: "A 12 V source feeds a 2 kΩ top resistor. A 3 kΩ resistor goes from the divider node to ground. The load is 6 kΩ."
+      },
+      {
+        name: "The Disappearing Drop", kind: "divider",
+        vs: 18, r1: 3, r2: 6, r3: 1, rl: 5,
+        description: "An 18 V divider has 3 kΩ on top and 6 kΩ to ground. Another 1 kΩ sits between the divider node and the 5 kΩ load."
+      },
+      {
+        name: "The Norton Acrobat", kind: "norton",
+        is: 6, r: 2, rl: 4,
+        description: "A 6 mA current source is in parallel with a 2 kΩ resistor. A 4 kΩ load connects across the output."
+      },
+      {
+        name: "The Straight Wire", kind: "series",
+        vs: 9, r1: 1, rl: 2,
+        description: "A 9 V source feeds the 2 kΩ load through a single 1 kΩ series resistor."
+      },
+      {
+        name: "The Mirror Tent", kind: "divider",
+        vs: 24, r1: 4, r2: 4, r3: 0, rl: 4,
+        description: "A 24 V source feeds two 4 kΩ divider resistors. A 4 kΩ load connects from their junction to ground."
+      },
+      {
+        name: "The Final Surge", kind: "norton",
+        is: 8, r: 1.5, rl: 3,
+        description: "An 8 mA current source is in parallel with 1.5 kΩ. The final load is 3 kΩ."
+      }
+    ];
+
+    const $ = id => document.getElementById(id);
+    const parallel = (a, b) => a * b / (a + b);
+    const voltage = c => c.kind === "norton" ? c.is * c.r
+      : c.kind === "series" ? c.vs
+      : c.vs * c.r2 / (c.r1 + c.r2);
+    const resistance = c => c.kind === "norton" ? c.r
+      : c.kind === "series" ? c.r1
+      : parallel(c.r1, c.r2) + c.r3;
+    const current = c => voltage(c) / (resistance(c) + c.rl);
+    const format = n => Number(n.toFixed(2)).toString();
+    const stageNames = [
+      "REMOVE THE LOAD", "OPEN-CIRCUIT VOLTAGE",
+      "DEACTIVATE THE SOURCE", "THEVENIN RESISTANCE", "LOAD CURRENT"
+    ];
+
+    let act = 0, stage = 0, points = 0, streak = 0, lives = 3;
+    let locked = false, hinted = false, deadline = 0, choices = [];
+    let soundEnabled = true, audio;
+    let best = 0;
+    try { best = Number(localStorage.getItem("circuits-circus-best")) || 0; }
+    catch { /* Browser storage is optional. */ }
+
+    function playTone(correct) {
+      if (!soundEnabled) return;
+      try {
+        audio ??= new (window.AudioContext || window.webkitAudioContext)();
+        const tone = audio.createOscillator();
+        const volume = audio.createGain();
+        tone.type = correct ? "sine" : "sawtooth";
+        tone.frequency.setValueAtTime(correct ? 650 : 210, audio.currentTime);
+        tone.frequency.exponentialRampToValueAtTime(
+          correct ? 990 : 110, audio.currentTime + .14
+        );
+        volume.gain.setValueAtTime(.06, audio.currentTime);
+        volume.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .17);
+        tone.connect(volume).connect(audio.destination);
+        tone.start();
+        tone.stop(audio.currentTime + .18);
+      } catch { /* Sound is optional. */ }
+    }
+
+    function shuffle(values) {
+      const result = [...values];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function numericOptions(answer, unit) {
+      const values = [answer];
+      for (const n of [
+        answer * .5, answer * 1.5, answer + 1,
+        answer * .75, answer + 3, answer * 2
+      ]) {
+        if (values.length === 4) break;
+        if (n > 0 && !values.some(value => format(value) === format(n)))
+          values.push(n);
+      }
+      return shuffle(values.map((n, i) => ({
+        label: `${format(n)} ${unit}`, correct: i === 0
+      })));
+    }
+
+    function puzzle() {
+      const c = levels[act];
+
+      if (stage === 0) return {
+        prompt: "First move: what happens to the load?",
+        hint: "You need an open circuit at the output to find VTH.",
+        reason: "Remove the load and mark its two terminals.",
+        options: shuffle([
+          { label: "Remove the load", correct: true },
+          { label: "Short the load", correct: false },
+          { label: "Leave the load connected", correct: false }
+        ])
+      };
+
+      if (stage === 1) return {
+        prompt: "What voltage appears across the open terminals?",
+        hint: c.kind === "norton" ? "Current times parallel resistance gives volts."
+          : c.kind === "series" ? "An open branch has zero current and zero IR drop."
+          : "Use the top and bottom resistors as a voltage divider.",
+        reason: c.kind === "norton"
+          ? `VTH = ${c.is} mA × ${c.r} kΩ = ${format(voltage(c))} V.`
+          : c.kind === "series"
+          ? `Open-circuit current is zero, so VTH = ${c.vs} V.`
+          : `VTH = ${c.vs} × ${c.r2}/(${c.r1} + ${c.r2}) = ${format(voltage(c))} V.`,
+        options: numericOptions(voltage(c), "V")
+      };
+
+      if (stage === 2) {
+        const isCurrentSource = c.kind === "norton";
+        return {
+          prompt: "How do you turn off the independent source?",
+          hint: isCurrentSource
+            ? "Zero-current ideal source = open circuit."
+            : "Zero-voltage ideal source = short circuit.",
+          reason: isCurrentSource
+            ? "Open the independent current source. Keep the resistor."
+            : "Short the independent voltage source. Keep the resistors.",
+          options: shuffle([
+            {
+              label: isCurrentSource ? "Open the current source" : "Short the voltage source",
+              correct: true
+            },
+            {
+              label: isCurrentSource ? "Short the current source" : "Open the voltage source",
+              correct: false
+            },
+            { label: "Remove all the resistors", correct: false }
+          ])
+        };
+      }
+
+      if (stage === 3) return {
+        prompt: "What resistance do you see from the output?",
+        hint: c.kind === "norton" ? "The parallel resistor stays."
+          : c.kind === "series" ? "The series resistor stays."
+          : "R1 and R2 become parallel. Add R3 if it is between their node and the output.",
+        reason: c.kind === "norton" ? `RTH = ${c.r} kΩ.`
+          : c.kind === "series" ? `RTH = ${c.r1} kΩ.`
+          : `RTH = (${c.r1} || ${c.r2}) + ${c.r3} = ${format(resistance(c))} kΩ.`,
+        options: numericOptions(resistance(c), "kΩ")
+      };
+
+      return {
+        prompt: `Reconnect the ${c.rl} kΩ load. What is its current?`,
+        hint: "IL = VTH / (RTH + RL). V / kΩ = mA.",
+        reason: `IL = ${format(voltage(c))}/(${format(resistance(c))} + ${c.rl}) = ${format(current(c))} mA.`,
+        options: numericOptions(current(c), "mA")
+      };
+    }
+
+    function schematic(c, loadOn, sourceOff) {
+      const wire = 'fill="none" stroke="#70e2d1" stroke-width="5" stroke-linecap="round"';
+      const resistor = (x, y, w, h, label) => `
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5"
+          fill="#39304c" stroke="#ffcf57" stroke-width="3"/>
+        <text x="${x + w / 2}" y="${y - 8}" text-anchor="middle"
+          fill="#fff9e9" font-size="17">${label}</text>`;
+
+      const source = sourceOff
+        ? c.kind === "norton"
+          ? `<path d="M70 45 V88 M70 151 V225" ${wire}/>
+             <text x="10" y="168" fill="#ffcf57" font-size="15">OPEN</text>`
+          : `<path d="M70 45 V225" ${wire}/>
+             <text x="10" y="168" fill="#ffcf57" font-size="15">SHORT</text>`
+        : `<path d="M70 45 V94 M70 146 V225" ${wire}/>
+           <circle cx="70" cy="120" r="26" fill="#28203b"
+             stroke="#ff829d" stroke-width="4"/>
+           <text x="70" y="127" text-anchor="middle" fill="#ff829d"
+             font-size="22">${c.kind === "norton" ? "↑" : "±"}</text>
+           <text x="8" y="170" fill="#ff829d" font-size="16">
+             ${c.kind === "norton" ? c.is + " mA" : c.vs + " V"}
+           </text>`;
+
+      const load = loadOn
+        ? `<path d="M450 45 V108 M450 165 V225" ${wire}/>
+           ${resistor(434, 109, 32, 55, c.rl + "k")}
+           <text x="473" y="145" fill="#ffcf57" font-size="17">RL</text>`
+        : `<circle cx="450" cy="45" r="7" fill="#1c1830"
+             stroke="#ffcf57" stroke-width="3"/>
+           <circle cx="450" cy="225" r="7" fill="#1c1830"
+             stroke="#ffcf57" stroke-width="3"/>
+           <text x="464" y="51" fill="#ffcf57" font-size="18">a</text>
+           <text x="464" y="232" fill="#ffcf57" font-size="18">b</text>`;
+
+      let network;
+      if (c.kind === "norton") {
+        network = `<path d="M70 45 H450 M70 225 H450 M280 45 V108
+                     M280 165 V225" ${wire}/>
+                   ${resistor(264, 109, 32, 55, c.r + "k")}`;
+      } else {
+        network = `<path d="M70 45 H140 M217 45 H280 M70 225 H450" ${wire}/>
+                   ${resistor(141, 31, 75, 28, c.r1 + "k")}
+                   ${c.kind === "divider"
+                     ? `<path d="M280 45 V108 M280 165 V225" ${wire}/>
+                        ${resistor(264, 109, 32, 55, c.r2 + "k")}`
+                     : ""}
+                   ${c.r3
+                     ? `<path d="M280 45 H335 M411 45 H450" ${wire}/>
+                        ${resistor(336, 31, 74, 28, c.r3 + "k")}`
+                     : `<path d="M280 45 H450" ${wire}/>`}`;
+      }
+
+      return `<svg viewBox="0 0 505 265" role="img"
+          aria-label="Circuit schematic with ${loadOn ? "connected load" : "open load terminals"}">
+          ${network}${source}${load}
+          <circle cx="280" cy="45" r="6" fill="#ffcf57"/>
+        </svg>`;
+    }
+
+    function updateHud() {
+      $("act").textContent = `${act + 1} / ${levels.length}`;
+      $("score").textContent = points.toLocaleString();
+      $("streak").textContent = streak;
+      $("lives").textContent = "♥ ".repeat(lives) + "♡ ".repeat(3 - lives);
+      $("best").textContent = Math.max(best, points).toLocaleString();
+      $("track").innerHTML = levels.map((_, i) =>
+        `<i class="${i < act ? "done" : i === act ? "current" : ""}"></i>`
+      ).join("");
+    }
+
+    function updateTimer() {
+      if ($("game").hidden) return;
+      const ms = Math.max(0, deadline - Date.now());
+      $("time").textContent = `${Math.ceil(ms / 1000)}s`;
+      $("timerFill").style.width = `${ms / 250}%`;
+      $("timerFill").style.background = ms < 7000 ? "#ff829d" : "#70e2d1";
+      if (ms === 0 && !locked) timeOut();
+    }
+
+    function showStage() {
+      locked = false;
+      hinted = false;
+      const c = levels[act];
+      const task = puzzle();
+      choices = task.options;
+
+      $("game").hidden = false;
+      $("ending").hidden = true;
+      $("circuitNumber").textContent = `ACT ${String(act + 1).padStart(2, "0")}`;
+      $("levelTitle").textContent = c.name;
+      $("description").textContent = c.description;
+      $("stepLabel").textContent = `STEP ${stage + 1}/5 · ${stageNames[stage]}`;
+      $("question").textContent = task.prompt;
+      $("circuit").innerHTML = schematic(
+        c, stage === 0 || stage === 4, stage === 3
+      );
+      $("boardNote").textContent = stage === 3
+        ? "Source off; load still removed."
+        : stage === 0 || stage === 4
+          ? "Load connected."
+          : "Load removed; terminals open.";
+
+      $("feedback").className = "";
+      $("feedback").textContent = "Choose an answer. You can also press keys 1–4.";
+      $("hint").disabled = false;
+      $("next").hidden = true;
+      $("choices").innerHTML = choices.map((choice, i) =>
+        `<button class="choice" type="button" data-index="${i}">
+          <span class="key">${i + 1}</span>${choice.label}
+        </button>`
+      ).join("");
+
+      $("choices").querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => answer(Number(button.dataset.index)));
+      });
+
+      deadline = Date.now() + 25000;
+      updateHud();
+      updateTimer();
+    }
+
+    function reveal(chosen = -1) {
+      $("choices").querySelectorAll("button").forEach((button, i) => {
+        button.disabled = true;
+        if (choices[i].correct) button.classList.add("correct");
+        else if (i === chosen) button.classList.add("wrong");
+      });
+      $("hint").disabled = true;
+      $("next").hidden = false;
+      $("next").textContent = lives === 0 ? "See results"
+        : act === levels.length - 1 && stage === 4 ? "Finish act"
+        : "Continue";
+    }
+
+    function answer(index) {
+      if (locked || !choices[index]) return;
+      locked = true;
+      const correct = choices[index].correct;
+      const task = puzzle();
+
+      if (correct) {
+        streak++;
+        points += 80 + Math.ceil(Math.max(0, deadline - Date.now()) / 1000) * 4
+          + Math.min(streak, 10) * 10;
+        $("feedback").className = "good";
+        $("feedback").textContent = `Correct! ${task.reason}`;
+      } else {
+        lives--;
+        streak = 0;
+        $("feedback").className = "bad";
+        $("feedback").textContent =
+          `The answer was “${choices.find(c => c.correct).label}.” ${task.reason}`;
+      }
+
+      playTone(correct);
+      reveal(index);
+      updateHud();
+    }
+
+    function timeOut() {
+      locked = true;
+      lives--;
+      streak = 0;
+      $("feedback").className = "bad";
+      $("feedback").textContent =
+        `Time! The answer was “${choices.find(c => c.correct).label}.” ${puzzle().reason}`;
+      playTone(false);
+      reveal();
+      updateHud();
+    }
+
+    function finish(won) {
+      $("game").hidden = true;
+      $("ending").hidden = false;
+      if (points > best) {
+        best = points;
+        try { localStorage.setItem("circuits-circus-best", String(best)); }
+        catch { /* Browser storage is optional. */ }
+      }
+      updateHud();
+      $("endingTitle").textContent = won ? "You saved the big top!" : "The breaker tripped";
+      $("endingText").textContent = won
+        ? `All six acts cleared. Score: ${points.toLocaleString()}. Best: ${best.toLocaleString()}.`
+        : `You reached act ${act + 1} and scored ${points.toLocaleString()}. Try another run!`;
+    }
+
+    function advance() {
+      if (!locked) return;
+      if (lives === 0) return finish(false);
+      if (stage < 4) stage++;
+      else if (act < levels.length - 1) { act++; stage = 0; }
+      else return finish(true);
+      showStage();
+    }
+
+    function restart() {
+      act = 0;
+      stage = 0;
+      points = 0;
+      streak = 0;
+      lives = 3;
+      showStage();
+    }
+
+    $("next").addEventListener("click", advance);
+    $("restart").addEventListener("click", restart);
+    $("hint").addEventListener("click", () => {
+      if (locked || hinted) return;
+      hinted = true;
+      points = Math.max(0, points - 25);
+      $("hint").disabled = true;
+      $("feedback").textContent = `HINT: ${puzzle().hint}`;
+      updateHud();
+    });
+    $("sound").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      $("sound").textContent = soundEnabled ? "Sound on" : "Sound off";
+    });
+    document.addEventListener("keydown", event => {
+      if (!$("game").hidden && !locked && /^[1-4]$/.test(event.key))
+        answer(Number(event.key) - 1);
+      else if (!$("game").hidden && locked && event.key === "Enter")
+        advance();
+    });
+
+    setInterval(updateTimer, 100);
+    showStage();
+  </script>
+</body>
+</html>
