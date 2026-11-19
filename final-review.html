@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circuits Circus - Final Review</title>
+<style>
+body{font-family:Arial,sans-serif;background:#10142b;color:white;margin:0;padding:20px}
+main{max-width:650px;margin:auto}
+section{background:#202747;padding:25px;border-radius:16px;margin:20px 0}
+button,a{background:#7468ee;color:white;border:0;border-radius:9px;padding:12px;margin:5px;cursor:pointer;display:inline-block;text-decoration:none}
+button:hover{background:#9187ff}
+#answer{background:#313c63;padding:20px;border-radius:10px;margin-top:15px}
+</style>
+</head>
+<body>
+<main>
+<a href="index.html">Back to Circuits Circus</a>
+<h1>Final Exam Memory Lab</h1>
+<p>Learn it. Practice it. Remember it.</p>
+
+<section>
+<h2>Flashcards</h2>
+<h3 id="front"></h3>
+<div id="answer" hidden></div>
+<button onclick="reveal()">Reveal Answer</button>
+<button onclick="nextCard()">Next Card</button>
+</section>
+
+<section>
+<h2>Practice Problems</h2>
+<h3 id="question"></h3>
+<div id="choices"></div>
+<p id="feedback"></p>
+<button onclick="nextQuestion()">Next Problem</button>
+</section>
+</main>
+<script>
+const cards=[
+["Voltage source OFF?","Short circuit (wire)."],
+["Current source OFF?","Open circuit (break)."],
+["Superposition?","One independent source at a time, then add phasors."],
+["Thevenin voltage?","Open-circuit terminal voltage."],
+["Norton current?","Short-circuit terminal current."],
+["Inductor impedance?","Z = jXL"],
+["Capacitor impedance?","Z = -jXC"],
+["AC Ohm's law?","V = IZ"],
+["Norton impedance?","ZN = Zth"],
+["Thevenin to Norton?","IN = Vth / Zth"]
+];
+const problems=[
+["Voltage source turned off?",["Short","Open","Remove resistor"],0,"An ideal voltage source becomes a wire."],
+["Current source turned off?",["Short","Open","Ground"],1,"An ideal current source becomes an open circuit."],
+["Inductive reactance of 4 ohms?",["-j4","j4","4"],1,"Inductive reactance is positive imaginary."],
+["Capacitive reactance of 7 ohms?",["j7","7","-j7"],2,"Capacitive reactance is negative imaginary."],
+["Thevenin voltage is measured with output...",["Shorted","Open","Grounded"],1,"Vth is the open-circuit terminal voltage."],
+["Norton current is measured with output...",["Open","Shorted","Disconnected"],1,"IN is the short-circuit terminal current."],
+["What is (2+j3)+(4-j1)?",["6+j2","6+j4","2+j2"],0,"Add real and imaginary components separately."],
+["What is magnitude of 3+j4?",["7","5","1"],1,"sqrt(3²+4²)=5."],
+["Vth=12V, Zth=4 ohms. IN=?",["3A","48A","16A"],0,"IN = 12/4 = 3 A."],
+["What is Zth compared with ZN?",["Equal","Opposite","Unrelated"],0,"Thevenin and Norton equivalent impedances are equal."]
+];
+let ci=0,qi=0;
+function drawCard(){
+document.getElementById("front").textContent=cards[ci][0];
+document.getElementById("answer").textContent=cards[ci][1];
+document.getElementById("answer").hidden=true;
+}
+function reveal(){document.getElementById("answer").hidden=false}
+function nextCard(){ci=(ci+1)%cards.length;drawCard()}
+function drawQuestion(){
+const q=problems[qi];
+document.getElementById("question").textContent=q[0];
+document.getElementById("feedback").textContent="";
+const container=document.getElementById("choices");
+container.innerHTML="";
+q[1].forEach((choice,i)=>{
+const button=document.createElement("button");
+button.textContent=choice;
+button.onclick=()=>{
+document.getElementById("feedback").textContent=
+(i===q[2]?"Correct! ":"Try again. ")+q[3];
+};
+container.appendChild(button);
+});
+}
+function nextQuestion(){qi=(qi+1)%problems.length;drawQuestion()}
+drawCard();drawQuestion();
+</script>
+</body>
+</html>
